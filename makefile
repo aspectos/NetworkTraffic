@@ -4,6 +4,8 @@ code01: code01.cpp
 	$(CXX) $(CXXFLAG) -o $@ $@.cpp $(LIBS)
 code02: code02.cpp
 	$(CXX) $(CXXFLAG) -o $@ $@.cpp $(LIBS)
-
+capture: capture.cpp
+	$(CXX) $(CXXFLAG) -o $@ $@.cpp $(LIBS)
+all: code01 code02 capture
 clean:
-	rm code01
+	rm code01 code02 capture

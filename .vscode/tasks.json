@@ -22,6 +22,16 @@
 		},
         {
             "type": "shell",
+            "label": "make all",
+            "command": "make",
+            "args": [
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
             "label": "make code01",
             "command": "make",
             "args": [
@@ -29,7 +39,7 @@
             ],
             "group": "build",
             "problemMatcher": []
-        }
+        },
         {
             "type": "shell",
             "label": "make code02",

@@ -71,8 +71,8 @@ int main(int argc, char *argv[]) {
         // Show Epoch Time
         printf("Epoch Time: %ld:%ld seconds\n", header->ts.tv_sec, header->ts.tv_usec);
 
-        ip = (struct sniff_ip*)(data + SIZE_ETHERNET);
-        std::cout <<ip.ip_src;
+        // ip = (struct sniff_ip*)(data + SIZE_ETHERNET);
+        // std::cout <<ip.ip_src;
 
         /*// loop through the packet and print it as hexidecimal representations of octets
         // We also have a function that does this similarly below: PrintData()
