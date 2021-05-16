@@ -45,11 +45,12 @@ int main(int argc, char *argv[]) {
     }
 
     time_t timEnd = std::time(nullptr) + std::stoi(strTime);
-    int iBatch;
+    int iBatch, iCount;
     while (timEnd > std::time(nullptr)) {
         iBatch++; // std::cout <<"Batch: " << iBatch++ <<std::endl;
         // if(pcap_dispatch(descr, -1, packetHandler, (u_char*) &iBatch) == PCAP_ERROR){
-        if(pcap_dispatch(descr, -1, &pcap_dump, (u_char*)dumper) == PCAP_ERROR){
+        iCount = pcap_dispatch(descr, -1, &pcap_dump, (u_char*)dumper);
+        if( iCount == PCAP_ERROR){
             std::cout <<pcap_geterr(descr);
             return 1;
         }
