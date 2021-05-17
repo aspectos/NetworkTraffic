@@ -88,15 +88,10 @@ int main(int argc, char *argv[]) {
             printf("Warning! Capture size different than packet size: %ld bytes\n", header->len);
  
         // Show Epoch Time
-        printf("Epoch Time: %ld:%ld seconds\n", header->ts.tv_sec, header->ts.tv_usec);
+        printf("Epoch Time: %ld.%ld seconds\t", header->ts.tv_sec, header->ts.tv_usec);
 
         ip = (struct sniff_ip*)(data + SIZE_ETHERNET);
-        char sIPstr[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &(ip->ip_src.s_addr), sIPstr, INET_ADDRSTRLEN);
-        std::cout <<"ip_src: " <<sIPstr;
-        inet_ntop(AF_INET, &(ip->ip_dst.s_addr), sIPstr, INET_ADDRSTRLEN);
-        std::cout <<"\t ip_dst: " <<sIPstr;
-        std::cout <<"\t ip_dst: " <<strIP(ip->ip_dst.s_addr);
+        std::cout <<"ip_src: " <<strIP(ip->ip_src.s_addr) <<"\t ip_dst: " <<strIP(ip->ip_dst.s_addr);
 
 
         /*// loop through the packet and print it as hexidecimal representations of octets

@@ -9,7 +9,7 @@ static int packetCount = 0;
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
     std::cout << ++packetCount << " packet(s) captured\tlen: " << pkthdr->len <<" \ttime: " <<pkthdr->ts.tv_usec 
         <<" \tbatch: " <<*((int*)userData) <<std::endl;
-} 
+}
 
 int main(int argc, char *argv[]) {
     if(argc < 3){
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
         std::cout << "pcap_open_live() failed: " << errbuf << std::endl;
         return 1;
     }
-    
+
     dumper = pcap_dump_open(descr,strFilename.c_str());
     if (dumper == NULL) {
         std::cout << "pcap_dump_open() failed: " << pcap_geterr(descr)
