@@ -5,10 +5,29 @@
 using namespace std;
 
 static int packetCount = 0;
+// #define SIZE_ETHERNET 14
+static const int SIZE_ETHERNET = 14;
 
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
   cout << ++packetCount << " packet(s) captured\tlen: " << pkthdr->len <<" \ttime: " <<pkthdr->ts.tv_usec <<endl;
-} 
+}
+
+struct strIP { 
+    uint32_t ip;
+    strIP(uint32_t i):ip(i){}
+};
+std::ostream &operator<<(std::ostream &os, strIP const &m) { 
+    char sIPstr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(m.ip), sIPstr, INET_ADDRSTRLEN);
+    return os << sIPstr;
+}
+
+// int main() { 
+//     myclass x(10);
+
+//     std::cout << x;
+//     return 0;
+// }
 
 int main(int argc, char *argv[]) {
     // if (--argc)
@@ -55,7 +74,7 @@ int main(int argc, char *argv[]) {
             u_int32_t th_seq;       /* sequence number */
             u_int32_t th_ack;       /* acknowledgement number */
         };
-    } ip;
+    } *ip;
 
 
     while (int returnValue = pcap_next_ex(pcap, &header, &data) >= 0){
@@ -63,7 +82,7 @@ int main(int argc, char *argv[]) {
  
         // Show the size in bytes of the packet
         printf("Packet size: %ld bytes\n", header->len);
- 
+
         // Show a warning if the length captured is different
         if (header->len != header->caplen)
             printf("Warning! Capture size different than packet size: %ld bytes\n", header->len);
@@ -71,8 +90,14 @@ int main(int argc, char *argv[]) {
         // Show Epoch Time
         printf("Epoch Time: %ld:%ld seconds\n", header->ts.tv_sec, header->ts.tv_usec);
 
-        // ip = (struct sniff_ip*)(data + SIZE_ETHERNET);
-        // std::cout <<ip.ip_src;
+        ip = (struct sniff_ip*)(data + SIZE_ETHERNET);
+        char sIPstr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(ip->ip_src.s_addr), sIPstr, INET_ADDRSTRLEN);
+        std::cout <<"ip_src: " <<sIPstr;
+        inet_ntop(AF_INET, &(ip->ip_dst.s_addr), sIPstr, INET_ADDRSTRLEN);
+        std::cout <<"\t ip_dst: " <<sIPstr;
+        std::cout <<"\t ip_dst: " <<strIP(ip->ip_dst.s_addr);
+
 
         /*// loop through the packet and print it as hexidecimal representations of octets
         // We also have a function that does this similarly below: PrintData()
