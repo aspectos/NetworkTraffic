@@ -6,17 +6,23 @@
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"       // for Toggle, Renderer, Vertical
 #include "ftxui/component/component_base.hpp"  // for ComponentBase
+#include "ftxui/component/button.hpp"            // for ButtonBase
 #include "ftxui/component/screen_interactive.hpp"  // for Component, ScreenInteractive
 #include "ftxui/dom/elements.hpp"  // for text, hbox, vbox, Element
 
 // using namespace ftxui;
 
 ftxui::Element ConfigText(int time) {
-  return ftxui::text(L"time = " + std::to_wstring(time)
-  );
+  // color(Color::RedLight, text(L"RedLight")),
+  return ftxui::color(ftxui::Color::Blue,  ftxui::text(L"time = " + std::to_wstring(time)));
+}
+ftxui::Element StatusText(int time) {
+  return ftxui::color(ftxui::Color::RedLight, ftxui::spinner(15, time));
 }
 
+
 int slider_value = 15;
+std::wstring status = L"Waiting";
 auto screen = ftxui::ScreenInteractive::TerminalOutput();
 ftxui::Component renderer;
 
@@ -93,17 +99,29 @@ int main(int argc, const char* argv[]) {
       runButton,
       exitButton,
   });
-
+  
   // auto 
   renderer = ftxui::Renderer(container, [&] {
     return ftxui::vbox({
-        ConfigText(slider_value),
-        ftxui::text(L"Choose your options:"),
-        ftxui::text(L""),
+        // ftxui::text(L"Choose your options:"),
+        // ftxui::text(L""),
         ftxui::hbox(ftxui::text(L" * Poweroff on startup      : "), toggle_1->Render()),
         ftxui::hbox(ftxui::text(L" * Out of process           : "), toggle_2->Render()),
         ftxui::hbox(ftxui::text(L" * Price of the information : "), toggle_3->Render()),
         ftxui::hbox(ftxui::text(L" * Number of elements       : "), toggle_4->Render()),
+        ftxui::separator(),
+
+        // ftxui::hbox(ftxui::color(ftxui::Color::RedLight,ftxui::text(L" * Status                   : ")), StatusText(slider_value)),
+        ftxui::hbox(ftxui::color(ftxui::Color::RedLight,ftxui::text(L" * Status                   : ")),
+                    ftxui::color(ftxui::Color::RedLight,ftxui::text(status)) | size(ftxui::WIDTH, ftxui::EQUAL, 10),
+                    ftxui::color(ftxui::Color::RedLight, ftxui::spinner(18 , slider_value))
+        ),
+        // ftxui::hbox(ConfigText(slider_value) | size(ftxui::WIDTH, ftxui::EQUAL, 20)),
+        ftxui::hbox(ftxui::color(ftxui::Color::Blue,  ftxui::text(L" * Zeit                     : ")),
+                    ftxui::color(ftxui::Color::Blue,  ftxui::text(std::to_wstring(slider_value)))),
+        ftxui::hbox(ftxui::color(ftxui::Color::Green, ftxui::text(L" * Captured Packets         : ")),
+                    ftxui::color(ftxui::Color::Green, ftxui::text(std::to_wstring(slider_value)))),
+        ftxui::separator(),
         // ftxui::hbox(ftxui::text(L" * das Zeit                 :                                           "), slider->Render()),
         slider->Render(),
         // ftxui::hbox({
@@ -111,12 +129,12 @@ int main(int argc, const char* argv[]) {
             exitButton->Render(),
             // ftxui::separator(),
             // }) | ftxui::xflex,
-    }) | ftxui::border | ftxui::size(ftxui::WIDTH, ftxui::LESS_THAN, 80);
+    }) /*| ftxui::border*/ | ftxui::size(ftxui::WIDTH, ftxui::LESS_THAN, 80);
   });
 
   // std::thread update([&screen, &shift]() {
   std::thread update([]() {
-    for (;;) {
+    for (int i=0;i<20;++i) {
       using namespace std::chrono_literals;
       std::this_thread::sleep_for(0.5s);
       slider_value++;
@@ -124,7 +142,9 @@ int main(int argc, const char* argv[]) {
         slider_value =1;
       screen.PostEvent(ftxui::Event::Custom);
     }
+    status = L"idle";
   });
+  update.detach();
 
   screen.Loop(renderer);
 }
