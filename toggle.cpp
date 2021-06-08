@@ -2,6 +2,7 @@
 #include <string>  // for wstring, basic_string
 #include <vector>  // for vector
 #include <thread>  // for sleep_for
+#include <sstream> // for stringstream
 
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"       // for Toggle, Renderer, Vertical
@@ -12,22 +13,32 @@
 
 // using namespace ftxui;
 
-ftxui::Element ConfigText(int time) {
-  // color(Color::RedLight, text(L"RedLight")),
-  return ftxui::color(ftxui::Color::Blue,  ftxui::text(L"time = " + std::to_wstring(time)));
-}
-ftxui::Element StatusText(int time) {
-  return ftxui::color(ftxui::Color::RedLight, ftxui::spinner(15, time));
-}
-
-
 int slider_value = 15;
+std::wstring captureID;
 std::wstring status = L"Waiting";
 auto screen = ftxui::ScreenInteractive::TerminalOutput();
 ftxui::Component renderer;
 
 void ButtonRunHandler(void){
-    // std::cout <<"Run dear\n" <<std::flush;;
+  std::thread update([]() {
+    status = L"capturing";
+    for (int i=0;i<50;++i) {
+      // using namespace std::chrono_literals;
+      std::this_thread::sleep_for(std::chrono::milliseconds{70});
+      slider_value++;
+      if(slider_value>25)
+        slider_value =1;
+      screen.PostEvent(ftxui::Event::Custom);
+    }
+    status = L"idle";
+    captureID = L"empty";
+  });
+  std::wstringstream oss;
+	oss << std::this_thread::get_id();
+	captureID = oss.str();
+  update.detach();
+
+  /*  // std::cout <<"Run dear\n" <<std::flush;;
     std::string reset_position;
     for(int i=0; i<3; ++i){
         std::this_thread::sleep_for(std::chrono::milliseconds{1200});
@@ -38,7 +49,7 @@ void ButtonRunHandler(void){
         std::cout <<screen.ResetPosition() <<std::flush;
         // screen.Draw(renderer);
         // screen.Print
-    }
+    }*/
 }
 
 int main(int argc, const char* argv[]) {
@@ -116,25 +127,22 @@ int main(int argc, const char* argv[]) {
                     ftxui::color(ftxui::Color::RedLight,ftxui::text(status)) | size(ftxui::WIDTH, ftxui::EQUAL, 10),
                     ftxui::color(ftxui::Color::RedLight, ftxui::spinner(18 , slider_value))
         ),
-        // ftxui::hbox(ConfigText(slider_value) | size(ftxui::WIDTH, ftxui::EQUAL, 20)),
+        ftxui::hbox(ftxui::color(ftxui::Color::Green1,ftxui::text(L" * Capture ID               : ")),
+                    ftxui::color(ftxui::Color::Green1,ftxui::text(captureID))),
         ftxui::hbox(ftxui::color(ftxui::Color::Blue,  ftxui::text(L" * Zeit                     : ")),
                     ftxui::color(ftxui::Color::Blue,  ftxui::text(std::to_wstring(slider_value)))),
         ftxui::hbox(ftxui::color(ftxui::Color::Green, ftxui::text(L" * Captured Packets         : ")),
                     ftxui::color(ftxui::Color::Green, ftxui::text(std::to_wstring(slider_value)))),
         ftxui::separator(),
-        // ftxui::hbox(ftxui::text(L" * das Zeit                 :                                           "), slider->Render()),
         slider->Render(),
-        // ftxui::hbox({
-            runButton->Render(),
-            exitButton->Render(),
-            // ftxui::separator(),
-            // }) | ftxui::xflex,
+        runButton->Render(),
+        exitButton->Render(),
     }) /*| ftxui::border*/ | ftxui::size(ftxui::WIDTH, ftxui::LESS_THAN, 80);
   });
 
   // std::thread update([&screen, &shift]() {
   std::thread update([]() {
-    for (int i=0;i<20;++i) {
+    for (int i=0;i<4;++i) {
       using namespace std::chrono_literals;
       std::this_thread::sleep_for(0.5s);
       slider_value++;
