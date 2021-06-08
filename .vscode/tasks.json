@@ -49,6 +49,16 @@
             ],
             "group": "build",
             "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "make toggle",
+            "command": "make",
+            "args": [
+                "toggle"
+            ],
+            "group": "build",
+            "problemMatcher": []
         }
 	]
 }

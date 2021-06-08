@@ -54,6 +54,9 @@ int main(int argc, char *argv[]) {
             std::cout <<pcap_geterr(descr);
             return 1;
         }
+        if(iCount)
+            std::cout <<iCount <<" packets captured.\n";
+
     }
 
     pcap_dump_close(dumper);
