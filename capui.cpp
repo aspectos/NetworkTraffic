@@ -10,11 +10,14 @@
  *
  */
 #include "capui.h"
-#include <memory>  // for allocator, __shared_ptr_access
-#include <string>  // for wstring, basic_string
-#include <vector>  // for vector
-#include <thread>  // for sleep_for
-#include <sstream> // for stringstream
+#include<memory>      // for allocator, __shared_ptr_access
+#include<string>      // for wstring, basic_string
+#include<vector>      // for vector
+#include<thread>      // for sleep_for
+#include<sstream>     // for stringstream
+#include<algorithm>   // for std::max
+// #include<iomanip>     //
+#include<fstream>     // for std::ofstream
 
 #include "ftxui/component/captured_mouse.hpp"  // for ftxui
 #include "ftxui/component/component.hpp"       // for Toggle, Renderer, Vertical
@@ -25,25 +28,39 @@
 
 #include "captureFuncs.h"
 
-struct sLabels{
-  int iInterface = 0, iTraffic = 0, iSoftware = 0, iVpn = 0, iOs = 0, iInternet = 0;
-};
-
-struct sStatus{
-  int iPacketCount, iDurationSec;
-  std::wstring wCaptureID, wFilename, wStatus;
-  sLabels Labels;
-};
-
 sStatus gsStatus = {.iDurationSec = 15, .wStatus = L"idle"};
 
 auto screen = ftxui::ScreenInteractive::TerminalOutput();
 ftxui::Component renderer;
 
+PcapLib myCap;
+std::ofstream myCsv;
+
 void ButtonRunHandler(void){
   std::thread update([]() {
     gsStatus.wStatus = L"capturing";
-    gsStatus.wFilename = Label_Traffic[gsStatus.Labels.iTraffic];
+    std::time_t tNow = std::time(nullptr);
+    tm* tmNow = localtime(&tNow);
+    std::wstringstream ss;
+    ss << tNow;
+    gsStatus.wFilename = ss.str();
+    ss.clear();
+    
+    wchar_t wstr[100];
+    // if(std::wcsftime(wstr, 100, L"%A %c", tmNow))
+    //     std::wcout << wstr << '\n';
+    // ss <<std::put_time(tmNow,"%c %Z");
+    std::wcsftime(wstr, 100, L"%A %c", tmNow);
+    gsStatus.wCaptureTime = wstr;
+
+    // gsStatus.wFilename = Label_Traffic[gsStatus.Labels.iTraffic];
+
+    // myCap.captureInit(myCap.mvwIfNames[0].c_str(), strFilename);
+    // myCap.captureFor(std::stoi(strTime), [](int iCount){
+    //     if(iCount)
+    //         std::cout <<iCount <<" packets captured. (in main lambda)\n";
+    // });
+
     for (int i=0;i<50;++i) {
       // using namespace std::chrono_literals;
       std::this_thread::sleep_for(std::chrono::milliseconds{70});
@@ -62,16 +79,27 @@ void ButtonRunHandler(void){
 }
 
 void ButtonDiscardHandler(void){
-  Label_Interface = myCap.getIfNames();
+  
+
   // int i;
   // for(auto& wIfName: myCap.getIfNames())
   //     std::cout <<++i <<". " <<wIfName <<std::endl;
 
 }
 
-PcapLib myCap;
-
 int main(int argc, const char* argv[]) {
+
+  myCap.getIfNames();
+  myCsv.open("datalog.csv");
+
+  int n = myCap.mvwIfNames.size();
+  if(n>7){
+    Label_Interface.resize(7);
+    std::transform (myCap.mvwIfNames.begin(), std::next(myCap.mvwIfNames.begin(),7), Label_Interface.begin(), to_wstring);
+  } else {
+    Label_Interface.resize(n);
+    std::transform (myCap.mvwIfNames.begin(), myCap.mvwIfNames.end(), Label_Interface.begin(), to_wstring);
+  }
 
   ftxui::Component toggleInterface = ftxui::Toggle(&Label_Interface, &gsStatus.Labels.iInterface);
   ftxui::Component toggleTraffic = ftxui::Toggle(&Label_Traffic, &gsStatus.Labels.iTraffic);
@@ -100,6 +128,7 @@ int main(int argc, const char* argv[]) {
       exitButton,
   });
   auto container = ftxui::Container::Vertical({
+      toggleInterface,
       toggleTraffic,
       toggleSoftware,
       toggleVpn,
@@ -115,6 +144,7 @@ int main(int argc, const char* argv[]) {
     return ftxui::vbox({
         // ftxui::text(L"Choose your options:"),
         // ftxui::text(L""),
+        ftxui::hbox(ftxui::text(L" * Network Interface           : "), toggleInterface->Render()),
         ftxui::hbox(ftxui::text(L" * Traffic type                : "), toggleTraffic->Render()),
         ftxui::hbox(ftxui::text(L" * Software                    : "), toggleSoftware->Render()),
         ftxui::hbox(ftxui::text(L" * VPN App                     : "), toggleVpn->Render()),
@@ -129,10 +159,14 @@ int main(int argc, const char* argv[]) {
         ),
         ftxui::hbox(ftxui::color(ftxui::Color::Green1,    ftxui::text(L" * Capture ID               : ")),
                     ftxui::color(ftxui::Color::Green1,    ftxui::text(gsStatus.wCaptureID))),
+        ftxui::hbox(ftxui::color(ftxui::Color::DeepPink1, ftxui::text(L" * Capture Time             : ")),
+                    ftxui::color(ftxui::Color::DeepPink1, ftxui::text(gsStatus.wCaptureTime))),
         ftxui::hbox(ftxui::color(ftxui::Color::DeepPink1, ftxui::text(L" * Filename                 : ")),
                     ftxui::color(ftxui::Color::DeepPink1, ftxui::text(gsStatus.wFilename))),
-        ftxui::hbox(ftxui::color(ftxui::Color::Blue,      ftxui::text(L" * Zeit (Seconds)           : ")),
+        ftxui::hbox(ftxui::color(ftxui::Color::Blue,      ftxui::text(L" * Duration (Sec)           : ")),
                     ftxui::color(ftxui::Color::Blue,      ftxui::text(std::to_wstring(gsStatus.iDurationSec)))),
+        ftxui::hbox(ftxui::color(ftxui::Color::Green,     ftxui::text(L" * Capture Time (Sec)       : ")),
+                    ftxui::color(ftxui::Color::Green,     ftxui::text(std::to_wstring(gsStatus.iCaptureTime)))),
         ftxui::hbox(ftxui::color(ftxui::Color::Green,     ftxui::text(L" * Packet Count             : ")),
                     ftxui::color(ftxui::Color::Green,     ftxui::text(std::to_wstring(gsStatus.iPacketCount)))),
         ftxui::separator(),
@@ -169,5 +203,6 @@ int main(int argc, const char* argv[]) {
   // update.detach();
 
   screen.Loop(renderer);
+  myCsv.close();
 }
 
