@@ -4,25 +4,7 @@
 #include<vector>
 #include<functional>    //For std::function
 
-// using namespace std;
-
-using StatusUpdateHandler = std::function<void(int iPacketCount)>;
-class PcapLib{
-    pcap_if_t* mIfDevs;
-    char* mcpDev;
-    std::string mwFilename;
-    pcap_t* mDescr;
-    pcap_dumper_t* mDumper;
-    time_t mtEndTime;
-public:
-    PcapLib();
-    ~PcapLib();
-    int miDurationSec;
-    std::vector<std::string> mvwIfNames;
-    std::vector<std::string>& getIfNames(void);
-    int captureInit(const std::string wDevName, const std::string wFilename);
-    int captureFor(int iDurationSec, StatusUpdateHandler);
-};
+#include"captureFuncs.h"
 
 PcapLib::PcapLib(){
     char errbuf[PCAP_ERRBUF_SIZE];
@@ -84,26 +66,5 @@ int PcapLib::captureFor(int iDurationSec, StatusUpdateHandler handler){
 
     pcap_dump_close(mDumper);
     pcap_close(mDescr);
-    return 0;
-}
-
-int main(int argc, char *argv[]) {
-    if(argc < 3){
-        std::cout <<"Usage: "<<argv[0] <<" {filename} {seconds}\n\n";
-        return 1;
-    }
-    std::string strFilename = argv[1], strTime = argv[2];
-
-    PcapLib myCap;
-
-    int i;
-    for(auto& wIfName: myCap.getIfNames())
-        std::cout <<++i <<". " <<wIfName <<std::endl;
-    
-    myCap.captureInit(myCap.mvwIfNames[0].c_str(), strFilename);
-    myCap.captureFor(std::stoi(strTime), [](int iCount){
-        if(iCount)
-            std::cout <<iCount <<" packets captured. (in main lambda)\n";
-    });
     return 0;
 }
