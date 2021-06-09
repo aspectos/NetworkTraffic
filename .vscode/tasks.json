@@ -32,6 +32,16 @@
         },
         {
             "type": "shell",
+            "label": "make capui",
+            "command": "make",
+            "args": [
+                "capui"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
             "label": "make code01",
             "command": "make",
             "args": [
