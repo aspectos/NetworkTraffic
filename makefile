@@ -9,7 +9,7 @@
 #  Date         : Jun 2021.
 # 
 #
-LIBS=-lboost_regex -lpcap -lpthread -LFTXUI/lib -lcomponent -lscreen -ldom -L.
+LIBS=-lpcap -lpthread -LFTXUI/lib -lcomponent -lscreen -ldom -L.
 # LIBS=-lboost_regex -lpcap 
 LIBCAP=-lcaptureFuncs
 INC=-IFTXUI/include -I.

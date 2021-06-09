@@ -37,12 +37,17 @@ PcapLib myCap;
 std::ofstream myCsv;
 
 void ButtonRunHandler(void){
-  std::thread update([]() {
-    gsStatus.wStatus = L"capturing";
-    gsStatus.iPacketCount = 0;
-    std::time_t tNow = std::time(nullptr);
-    tm* tmNow = localtime(&tNow);
+  if(gsStatus.wStatus != L"idle"){
+    gsStatus.wStatus = L"busy, wait:" + std::to_wstring(gsStatus.iDurationSec - gsStatus.iCaptureTime);
+    return;
+  }
+  gsStatus.wStatus = L"capturing";
+  gsStatus.iPacketCount = 0;
+  gsStatus.iCaptureTime = 0;
+  std::time_t tNow = std::time(nullptr);
+  tm* tmNow = localtime(&tNow);
 
+  std::thread thrCap([&]() {
     gsStatus.wFilename = to_wstring(std::to_string(tNow) + ".pcap");
     
     wchar_t wstr[100];
@@ -60,29 +65,38 @@ void ButtonRunHandler(void){
           <<std::endl;
 
     myCap.captureInit(myCap.mvwIfNames[gsStatus.Labels.iInterface].c_str(), to_string(gsStatus.wFilename));
-    myCap.captureFor(gsStatus.iDurationSec, [&tNow](int iCount){
+    myCap.captureFor(gsStatus.iDurationSec, [](int iCount){
       gsStatus.iPacketCount += iCount;
-      gsStatus.iCaptureTime = std::time(nullptr) - tNow;
-      screen.PostEvent(ftxui::Event::Custom);
+      // screen.PostEvent(ftxui::Event::Custom);
         // if(iCount)
         //     std::cout <<iCount <<" packets captured. (in main lambda)\n";
     });
 
-    for (int i=0;i<0;++i) {
+  });
+  thrCap.detach();
+
+  std::thread thrUpdate([tNow]() {
+    // for (int i=0;i<0;++i) {
+    while(gsStatus.iCaptureTime < gsStatus.iDurationSec){
       // using namespace std::chrono_literals;
-      std::this_thread::sleep_for(std::chrono::milliseconds{70});
-      gsStatus.iDurationSec++;
-      if(gsStatus.iDurationSec>25)
-        gsStatus.iDurationSec =1;
+      std::this_thread::sleep_for(std::chrono::milliseconds{100});
+      // gsStatus.iCaptureTime = tNow;
+      gsStatus.iCaptureTime = (int)(std::time(nullptr) - tNow);
       screen.PostEvent(ftxui::Event::Custom);
+
+      // gsStatus.iDurationSec++;
+      // if(gsStatus.iDurationSec>25)
+      //   gsStatus.iDurationSec =1;
     }
     gsStatus.wStatus = L"idle";
     gsStatus.wCaptureID = L"empty";
   });
+  thrUpdate.detach();
+
   std::wstringstream oss;
 	oss << std::this_thread::get_id();
 	gsStatus.wCaptureID = oss.str();
-  update.detach();
+  // update.detach();
 }
 
 void ButtonDiscardHandler(void){
@@ -160,9 +174,9 @@ int main(int argc, const char* argv[]) {
         ftxui::separator(),
 
         // ftxui::hbox(ftxui::color(ftxui::Color::RedLight,ftxui::text(L" * Status                   : ")), StatusText(gsStatus.iDurationSec)),
-        ftxui::hbox(ftxui::color(ftxui::Color::RedLight,ftxui::text(L" * Status                   : ")),
-                    ftxui::color(ftxui::Color::RedLight,ftxui::text(gsStatus.wStatus)) | size(ftxui::WIDTH, ftxui::EQUAL, 10),
-                    ftxui::color(ftxui::Color::RedLight, ftxui::spinner(18 , gsStatus.iDurationSec))
+        ftxui::hbox(ftxui::color(ftxui::Color::RedLight,  ftxui::text(L" * Status                   : ")),
+                    ftxui::color(ftxui::Color::RedLight,  ftxui::text(gsStatus.wStatus)) | size(ftxui::WIDTH, ftxui::EQUAL, 10)
+                    // ftxui::color(ftxui::Color::RedLight, ftxui::spinner(18 , gsStatus.iDurationSec))
         ),
         ftxui::hbox(ftxui::color(ftxui::Color::Green1,    ftxui::text(L" * Capture ID               : ")),
                     ftxui::color(ftxui::Color::Green1,    ftxui::text(gsStatus.wCaptureID))),
