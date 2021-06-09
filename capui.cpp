@@ -28,7 +28,7 @@
 
 #include "captureFuncs.h"
 
-sStatus gsStatus = {.iDurationSec = 15, .wStatus = L"idle"};
+sStatus gsStatus = {.iDurationSec = 5, .wStatus = L"idle"};
 
 auto screen = ftxui::ScreenInteractive::TerminalOutput();
 ftxui::Component renderer;
@@ -39,29 +39,36 @@ std::ofstream myCsv;
 void ButtonRunHandler(void){
   std::thread update([]() {
     gsStatus.wStatus = L"capturing";
+    gsStatus.iPacketCount = 0;
     std::time_t tNow = std::time(nullptr);
     tm* tmNow = localtime(&tNow);
-    std::wstringstream ss;
-    ss << tNow;
-    gsStatus.wFilename = ss.str();
-    ss.clear();
+
+    gsStatus.wFilename = to_wstring(std::to_string(tNow) + ".pcap");
     
     wchar_t wstr[100];
-    // if(std::wcsftime(wstr, 100, L"%A %c", tmNow))
-    //     std::wcout << wstr << '\n';
-    // ss <<std::put_time(tmNow,"%c %Z");
-    std::wcsftime(wstr, 100, L"%A %c", tmNow);
+    std::wcsftime(wstr, 100, L"%F %T %Z", tmNow);
     gsStatus.wCaptureTime = wstr;
 
     // gsStatus.wFilename = Label_Traffic[gsStatus.Labels.iTraffic];
+    myCsv <<to_string(gsStatus.wFilename) <<"," 
+          <<to_string(Label_Traffic[gsStatus.Labels.iTraffic]) <<","
+          <<to_string(Label_Software[gsStatus.Labels.iSoftware]) <<","
+          <<to_string(Label_VPN[gsStatus.Labels.iVpn]) <<","
+          <<to_string(Label_OS[gsStatus.Labels.iOs]) <<","
+          <<to_string(Label_Internet[gsStatus.Labels.iInternet]) <<","
+          <<to_string(gsStatus.wCaptureTime)
+          <<std::endl;
 
-    // myCap.captureInit(myCap.mvwIfNames[0].c_str(), strFilename);
-    // myCap.captureFor(std::stoi(strTime), [](int iCount){
-    //     if(iCount)
-    //         std::cout <<iCount <<" packets captured. (in main lambda)\n";
-    // });
+    myCap.captureInit(myCap.mvwIfNames[gsStatus.Labels.iInterface].c_str(), to_string(gsStatus.wFilename));
+    myCap.captureFor(gsStatus.iDurationSec, [&tNow](int iCount){
+      gsStatus.iPacketCount += iCount;
+      gsStatus.iCaptureTime = std::time(nullptr) - tNow;
+      screen.PostEvent(ftxui::Event::Custom);
+        // if(iCount)
+        //     std::cout <<iCount <<" packets captured. (in main lambda)\n";
+    });
 
-    for (int i=0;i<50;++i) {
+    for (int i=0;i<0;++i) {
       // using namespace std::chrono_literals;
       std::this_thread::sleep_for(std::chrono::milliseconds{70});
       gsStatus.iDurationSec++;
@@ -90,7 +97,7 @@ void ButtonDiscardHandler(void){
 int main(int argc, const char* argv[]) {
 
   myCap.getIfNames();
-  myCsv.open("datalog.csv");
+  myCsv.open("datalog.csv", std::ofstream::out | std::ofstream::app);
 
   int n = myCap.mvwIfNames.size();
   if(n>7){
