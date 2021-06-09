@@ -9,7 +9,7 @@
  * Date         : Jun 2021.
  *
  */
-
+#include "capui.h"
 #include <memory>  // for allocator, __shared_ptr_access
 #include <string>  // for wstring, basic_string
 #include <vector>  // for vector
@@ -25,24 +25,25 @@
 
 #include "captureFuncs.h"
 
-struct Status{
-  int iPacketCount, iDurationSec;
-  std::wstring wCaptureID, wFilename, wStatus;
+struct sLabels{
+  int iInterface = 0, iTraffic = 0, iSoftware = 0, iVpn = 0, iOs = 0, iInternet = 0;
 };
 
-Status gsStatus = {.iDurationSec = 15, .wStatus = L"idle"};
+struct sStatus{
+  int iPacketCount, iDurationSec;
+  std::wstring wCaptureID, wFilename, wStatus;
+  sLabels Labels;
+};
 
-// int slider_value = 15;
-// int giDurationSec = 15;
-// std::wstring gwThreadID, gwAppStatus = L"idle";
-// std::wstring captureID;
-// std::wstring status = L"Waiting";
+sStatus gsStatus = {.iDurationSec = 15, .wStatus = L"idle"};
+
 auto screen = ftxui::ScreenInteractive::TerminalOutput();
 ftxui::Component renderer;
 
 void ButtonRunHandler(void){
   std::thread update([]() {
-     gsStatus.wStatus = L"capturing";
+    gsStatus.wStatus = L"capturing";
+    gsStatus.wFilename = Label_Traffic[gsStatus.Labels.iTraffic];
     for (int i=0;i<50;++i) {
       // using namespace std::chrono_literals;
       std::this_thread::sleep_for(std::chrono::milliseconds{70});
@@ -60,63 +61,24 @@ void ButtonRunHandler(void){
   update.detach();
 }
 
+void ButtonDiscardHandler(void){
+  Label_Interface = myCap.getIfNames();
+  // int i;
+  // for(auto& wIfName: myCap.getIfNames())
+  //     std::cout <<++i <<". " <<wIfName <<std::endl;
+
+}
+
+PcapLib myCap;
+
 int main(int argc, const char* argv[]) {
 
-  std::vector<std::wstring> Label_Traffic = {
-    L"WebBrowse",
-    L"InstaBrowse",
-    L"SendEmail",
-    L"FileDL",
-    L"TorrentDL",
-    L"WatchVideo",
-    L"TextMessage",
-    L"TextChat",
-    L"VoiceCall",
-    L"VideoCall",
-  };
-  std::vector<std::wstring> Label_Software = {
-    L"Firefox",
-    L"Chrome",
-    L"Instagram",
-    L"qBittorrent",
-    L"Youtube",
-    L"Whatsapp",
-    L"Imo",
-    L"Skype",
-    L"Zoom",
-  };
-  std::vector<std::wstring> Label_VPN = {
-    L"None",
-    L"Lentern",
-    L"HotspotShield",
-    L"TunnelBear",
-    L"UltraSurf",
-  };
-  std::vector<std::wstring> Label_OS = {
-    L"Win10",
-    L"Fedroa",
-    L"Android",
-    L"IOS",
-  };
-  std::vector<std::wstring> Label_Internet = {
-    L"MCI",
-    L"Irancell",
-    L"AdslParsonline",
-    L"AdslShatel",
-    L"AdslTCl",
-    L"FibreTCI",
-  };
-
-  int iLabelTrafficSelect = 0;
-  int iLabelSoftwareSelect = 0;
-  int iLabelVpnSelect = 0;
-  int iLabelOsSelect = 0;
-  int iLabelInternetSelect = 0;
-  ftxui::Component toggleTraffic = ftxui::Toggle(&Label_Traffic, &iLabelTrafficSelect);
-  ftxui::Component toggleSoftware = ftxui::Toggle(&Label_Software, &iLabelSoftwareSelect);
-  ftxui::Component toggleVpn = ftxui::Toggle(&Label_VPN, &iLabelVpnSelect);
-  ftxui::Component toggleOs = ftxui::Toggle(&Label_OS, &iLabelOsSelect);
-  ftxui::Component toggleInternet = ftxui::Toggle(&Label_Internet, &iLabelInternetSelect);
+  ftxui::Component toggleInterface = ftxui::Toggle(&Label_Interface, &gsStatus.Labels.iInterface);
+  ftxui::Component toggleTraffic = ftxui::Toggle(&Label_Traffic, &gsStatus.Labels.iTraffic);
+  ftxui::Component toggleSoftware = ftxui::Toggle(&Label_Software, &gsStatus.Labels.iSoftware);
+  ftxui::Component toggleVpn = ftxui::Toggle(&Label_VPN, &gsStatus.Labels.iVpn);
+  ftxui::Component toggleOs = ftxui::Toggle(&Label_OS, &gsStatus.Labels.iOs);
+  ftxui::Component toggleInternet = ftxui::Toggle(&Label_Internet, &gsStatus.Labels.iInternet);
 
   auto slider = ftxui::Container::Vertical({
       ftxui::Slider(L"Time: ", &gsStatus.iDurationSec, 0, 60, 1),
@@ -128,7 +90,7 @@ int main(int argc, const char* argv[]) {
   // std::wstring button_label_run = L"Run";
   std::function<void()> on_button_clicked_;
   auto exitButton = ftxui::Button(L"   Quit", screen.ExitLoopClosure()); //&button_label_exit
-  auto discardButton = ftxui::Button(L"   Discard Last", screen.ExitLoopClosure()); //&button_label_exit
+  auto discardButton = ftxui::Button(L"   Discard Last", &ButtonDiscardHandler); //&button_label_exit
   auto runButton = ftxui::Button(L"   Run", &ButtonRunHandler); //&button_label_run
 //   exitButton = ftxui::Wrap(L"Button", exitButton);
 //   auto flags_win = window(text(L"Flags"), flags->Render());
@@ -172,7 +134,7 @@ int main(int argc, const char* argv[]) {
         ftxui::hbox(ftxui::color(ftxui::Color::Blue,      ftxui::text(L" * Zeit (Seconds)           : ")),
                     ftxui::color(ftxui::Color::Blue,      ftxui::text(std::to_wstring(gsStatus.iDurationSec)))),
         ftxui::hbox(ftxui::color(ftxui::Color::Green,     ftxui::text(L" * Packet Count             : ")),
-                    ftxui::color(ftxui::Color::Green,     ftxui::text(std::to_wstring(gsStatus.iDurationSec)))),
+                    ftxui::color(ftxui::Color::Green,     ftxui::text(std::to_wstring(gsStatus.iPacketCount)))),
         ftxui::separator(),
         slider->Render(),
         ftxui::hbox({
