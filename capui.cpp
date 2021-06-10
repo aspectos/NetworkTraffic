@@ -35,6 +35,7 @@ ftxui::Component renderer;
 
 PcapLib myCap;
 std::ofstream myCsv;
+std::ofstream myDiscard;
 
 void ButtonRunHandler(void){
   if(gsStatus.wStatus != L"idle"){
@@ -100,11 +101,10 @@ void ButtonRunHandler(void){
 }
 
 void ButtonDiscardHandler(void){
-  
-
-  // int i;
-  // for(auto& wIfName: myCap.getIfNames())
-  //     std::cout <<++i <<". " <<wIfName <<std::endl;
+  if(gsStatus.wFilename.empty() || gsStatus.wFilename == L"File Discarded")
+      return;
+    myDiscard <<to_string(gsStatus.wFilename) <<std::endl;
+    gsStatus.wFilename = L"File Discarded";
 
 }
 
@@ -112,6 +112,7 @@ int main(int argc, const char* argv[]) {
 
   myCap.getIfNames();
   myCsv.open("datalog.csv", std::ofstream::out | std::ofstream::app);
+  myDiscard.open("discard.csv", std::ofstream::out | std::ofstream::app);
 
   int n = myCap.mvwIfNames.size();
   if(n>7){
