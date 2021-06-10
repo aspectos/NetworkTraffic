@@ -1,12 +1,7 @@
 # Screen Shot
-![Vid](https://raw.githubusercontent.com/aspectos/NetworkTraffic/assets/.github/capui_video02.crop.mov)
-![Video](https://raw.githubusercontent.com/aspectos/NetworkTraffic/blob/assets/.github/capui_video02.crop.mov)
+![gif from branch](https://github.com/aspectos/NetworkTraffic/raw/assets/.github/capui_video02.crop.gif)
 
-![mov](https://taslimi.us/capui_video02.crop.mov)
-
-[![Alternate Text]({image-url})]({https://raw.githubusercontent.com/aspectos/NetworkTraffic/blob/assets/.github/capui_video02.crop.mov?raw=true} "Link Title")
-
-?raw=true
+asset in ./.github/capui_video02.crop.gif
 
 # Simple Video
 [![asciicast](https://asciinema.org/a/ALAwYiUes14mFT0fXvWax8XyQ.svg)](https://asciinema.org/a/ALAwYiUes14mFT0fXvWax8XyQ)
