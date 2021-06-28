@@ -70,6 +70,7 @@ std::vector<std::wstring> Label_VPN = {
 };
 std::vector<std::wstring> Label_OS = {
   L"Win10",
+  L"Win7",
   L"Fedroa",
   L"Android",
   L"IOS",
@@ -81,5 +82,6 @@ std::vector<std::wstring> Label_Internet = {
   L"AdslShatel",
   L"AdslTCl",
   L"FibreTCI",
+  L"ITRC"
 };
 
