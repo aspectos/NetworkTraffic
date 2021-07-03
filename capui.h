@@ -49,6 +49,7 @@ std::vector<std::wstring> Label_Traffic = {
   L"TextChat",
   L"VoiceCall",
   L"VideoCall",
+  L"NoTask",
 };
 std::vector<std::wstring> Label_Software = {
   L"Firefox",
@@ -74,6 +75,9 @@ std::vector<std::wstring> Label_OS = {
   L"Fedroa",
   L"Android",
   L"IOS",
+  L"AndrEmuWin10",
+  L"AndrEmuWin7",
+  L"AndrEmuFedora",
 };
 std::vector<std::wstring> Label_Internet = {
   L"MCI",

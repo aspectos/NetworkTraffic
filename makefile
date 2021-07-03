@@ -25,7 +25,7 @@ truncate: truncate.cpp
 	$(CXX) $(CXXFLAG) -o $@ $@.cpp $(LIBS)
 toggle: toggle.cpp
 	$(CXX) $(CXXFLAG) -o $@ $@.cpp $(INC) $(LIBS)
-capui: capui.cpp
+capui: capui.cpp capui.h
 	$(CXX) $(CXXFLAG) -o $@ $@.cpp $(INC) $(LIBS) $(LIBCAP)
 captureFuncsMain: captureFuncsMain.cpp
 	$(CXX) $(CXXFLAG) -o $@ $@.cpp $(INC) $(LIBS) $(LIBCAP)
